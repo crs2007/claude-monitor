@@ -409,6 +409,14 @@ void uiApplyRotation(bool flipped) {
 // MANGO_UI-only, not DUST_UI-only, and mini-s3-35 is MANGO_UI without DUST_UI.
 static uint8_t s_mdlMask = 0x0F;
 
+#if defined(BOARD_CROWPANEL_ADV_35) || defined(BOARD_CROWPANEL_35)
+// CrowPanel has no header label/URL alternation (no web panel, no DUST_UI) —
+// just the LAN IP shown in place of the static "CLAUDE USAGE" label once known,
+// cached at boot (WiFi.localIP() doesn't change without a reconnect).
+static char s_cpIp[40] = "";
+void uiSetNetInfo(const char* ip) { strlcpy(s_cpIp, ip, sizeof(s_cpIp)); }
+#endif
+
 #ifdef DUST_UI
 // The header's left text alternates between the device label and the panel URL
 // on the 10s clock tick. Both strings print opaque at a fixed width so each
@@ -1674,7 +1682,11 @@ void uiDashboard(const UsageData& data, unsigned long lastFetchMs, int rssi, int
     g.setTextColor(C_TEXT, C_HEAD);
     g.setTextSize(TS(1));
     g.setCursor(SX(4), SY(5));
+#if defined(BOARD_CROWPANEL_ADV_35) || defined(BOARD_CROWPANEL_35)
+    g.print(s_cpIp[0] ? s_cpIp : "CLAUDE USAGE");
+#else
     g.print("CLAUDE USAGE");
+#endif
 #endif
 
     unsigned long ago = (millis() - lastFetchMs) / 1000;
